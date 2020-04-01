@@ -1,0 +1,10 @@
+language: python
+python:
+  - "3.6"
+script: python -m unittest discover -s ./tests
+notifications:
+  slack:
+    rooms:
+      - secure: <encryped_secure_token>
+    on_success: never
+    on_failure: always
