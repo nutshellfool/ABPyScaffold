@@ -1,25 +1,9 @@
-# ABPyScaffold
-Scaffold project for Python
+# project name
 
+## what is the problem solved 
 
-## Why this project
+## what is the design constraint
 
-There are too much chores before starting a project coding.  
-such as:  
+## How to use this
 
-* necessary engineering docs
-* CI/CD configuration template file
-* Project package structure 
-
-this project is a template project for reducing these chores.
-
-## what in this project
-
-### engineering docs
-
-* style guide
-* CI/CD guide
-
-### CI/CD configuration template file
-
-* .travis.yml configuration file
+## references
