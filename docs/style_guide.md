@@ -20,6 +20,13 @@ If you are using PyCharm IDE, you can also install this plugin [pylint-pycharm](
 
 Following the [Google style guide (Python) - file naming](http://google.github.io/styleguide/pyguide.html#3163-file-naming)
 
+#### docstring
+
+Following the [Google style guide (Python) - Comments and Docstrings](https://github.com/google/styleguide/blob/gh-pages/pyguide.md#38-comments-and-docstrings)
+if you are using PyCharm, you can setting the docstring to Google style by following steps:  
+
+> preferences -> tools -> Python integrated tools  
+> Change the Docstring format from default reStructuredText to Google 
 
 ### Common Engineering rule
 
