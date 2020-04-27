@@ -174,13 +174,51 @@ call `mro()` method before call parent class
 
 ### Descriptors
 
-#### introspection Descriptor
+private property definition: 
 
-#### Meta-descriptor
+* use `_` prefix not `__`
+
+prefix `__` will call name mangling algorithm 
+
+As for name mangling example:  
+```python
+
+class MyClass(object):
+    __private_value = 1
+    
+
+instance_myclass = MyClass()
+instance_myclass._MyClass__private_value
+``` 
+`<instance>._CLASSNAME__private_value` will get the name mangling property
 
 ### Properties
 
 ## Slots
+
+if you want to static attribute list, 
+and skip the creation of the `__dict__` list in each instance of the class.
+
+The answer is `__slot__` property
+
+Example :
+
+```python
+class WeekDay(object):
+    __slots__ = ['monday', 'tuesday', 'wednesday', 'tuesday', 'friday', 'saturday', 'sunday']
+
+instance_weekday = WeekDay()
+instance_weekday.friday = 1
+instance_weekday.whateverday = 1
+
+```
+
+```PlainText
+
+Traceback (most recent call last):
+  File "<input>", line 6, in <module>
+AttributeError: 'WeekDay' object has no attribute 'whateverday'
+```
 
 ## Meta-programming
  
