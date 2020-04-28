@@ -222,14 +222,126 @@ AttributeError: 'WeekDay' object has no attribute 'whateverday'
 
 ## Meta-programming
  
+Meta programming involve two level operation on instance and class:  
+
+* introspection
+* reflection
+
+### type introspection
+
+The ability of a program to examine the type or properties of an object at runtime. 
+
+#### introspection method
+
+* `dir()`
+
+* `type()`
+
+* `hasattr()`
+
+* `isinstance()` 
+
+### reflection
+
+Step further than introspection, 
+the ability of a program to manipulate the values, metadata, properties and the function of an object at runtime.
+
 ### __new__ Method
 
+A static method that called before `__init__()` initialized method,
+ this feature is commonplace for subclass immutable build-in class(for example: int float str frozenset ...).
+ 
+```python
+class NoneZero(int):
+    def __new__(cls, value):
+        return super().__new__(cls, value) if value != 0 else None
+        
+    def __init__(self, value):
+        # Here you do NOT need to override __init__ method,
+        # this is just for illustrate the __init__ call lifecycle
+        print('__init__ called {}'.format(value) )
+        super().__init__()
+
+```
+
+```PlainText
+>>> type(NoneZero(6))
+__init__ called 6
+<class 'NoneZero'>
+>>> type(NoneZero(0))
+<class 'NoneType'>
+```
+
+As you can see, when `__new__` method do NOT return the Type, the `__init__` method do NOT call.
+
+
+Actually the `__new__` method feature can be implemented by factory design pattern.
+
 ### __metaclass__ Method
+
+#### what is meta class
+
+in short : "class' class" 
+
+As you know, a instance is `instanceof` of class, and a class is `instanceof` what?
+
+In Python the answer is `type`.  
+
+Here is an example code showing how to define a class in other way.
+
+the ordinary way of define a class
+
+```python
+
+class MyClass:
+    data = 1
+
+```
+```PlainText
+>>> instance = MyClass()
+>>> MyClass, instance
+(<class 'MyClass'>, <MyClass object at 0x10e5a9978>)
+>>> type(MyClass)
+<class 'type'>
+>>> type(instance)
+<class 'MyClass'>
+>>> instance.data
+1
+```
+
+
+```python
+MyClass1 = type('MyClass1', (), {'data': 1})
+
+```
+
+```PlainText
+>>> instance = MyClass1()
+>>> MyClass1, instance
+(<class 'MyClass1'>, <MyClass1 object at 0x10ebaa080>)
+>>> instance.data
+1
+```
+
+#### metaclass inherit type
+
+```python
+
+class Metaclass(type):
+    def __new__(cls,name, bases, namespace):
+        return super().__new__(cls, name, )
+
+```
+
+#### `__metaclass__` in Python3
+
 
 
 ## References
 
-* [wikipedia C3 linearization](https://en.wikipedia.org/wiki/C3_linearization)
+* [Wikipedia C3 linearization](https://en.wikipedia.org/wiki/C3_linearization)
 * [The Python 2.3 Method Resolution Order](https://www.python.org/download/releases/2.3/mro/)
 * [Guido van Rossum - Method Resolution Order](http://python-history.blogspot.com/2010/06/method-resolution-order.html)
 * [expert python programming](https://www.packtpub.com/application-development/expert-python-programming-third-edition)
+* [Wikipedia type introspection](https://en.wikipedia.org/wiki/Type_introspection)
+* [Wikipedia reflection]()
