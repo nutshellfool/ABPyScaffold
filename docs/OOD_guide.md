@@ -328,14 +328,145 @@ MyClass1 = type('MyClass1', (), {'data': 1})
 ```python
 
 class Metaclass(type):
-    def __new__(cls,name, bases, namespace):
-        return super().__new__(cls, name, )
+    def __new__(metacls, name, bases, namespace):
+        print(metacls, "__new__ called")
+        return super().__new__(metacls, name, bases, namespace)
+        
+    @classmethod
+    def __prepare__(metacls, name, bases, **kwargs):
+        print(metacls, "__prepare__ called")
+        return super().__prepare__(name, bases, **kwargs)
+        
+    def __init__(cls, name, bases, namespace, **kwargs):
+        print(cls, "__init__ called")
+        super().__init__(name, bases, namespace)
+        
+    def __call__(cls, *args, **kwargs):
+        print(cls, "__call__ called")
+        return super().__call__(*args, **kwargs)
+        
+class MetaRevealingClass(metaclass=Metaclass):
+    def __new__(cls, *args, **kwargs):
+        print(cls, "__new__ called")
+        return super().__new__(cls)
+    
+    def __init__(self):
+        print(self, "__init__ called")
+        super().__init__()
 
 ```
 
+```PlainText
+<class 'Metaclass'> __prepare__ called
+<class 'Metaclass'> __new__ called
+<class 'MetaRevealingClass'> __init__ called
+```
+
+`>>> instance = MetaRevealingClass()`
+```PlainText
+<class 'MetaRevealingClass'> __call__ called
+<class 'MetaRevealingClass'> __new__ called
+<MetaRevealingClass object at 0x10ff28978> __init__ called
+```
+
+#### Customized meta class and its hook(lifecycle) method
+
+
+* `__new___(mcs, name, bases, namespace, **kwargs)`
+* `__prepare__(mcs, name, base, **kwargs)`
+* `__init__(cls, name, bases, namespace, **kwargs)`
+* `__call__(cls, *args, **kwargs)`
+
 #### `__metaclass__` in Python3
 
+just like above example, you can define a class base on customized meta class by:  
 
+```python
+class CustomizedMetaClass(type):
+    pass
+
+class CustomizedClass(metaclass=CustomizedMetaClass):
+    pass
+
+```
+
+#### meta-class usage in real life
+
+meta class usually be used in framework code(such as ORM and DSL);  
+
+As for DSL, here is an example [YAML](https://pyyaml.org/wiki/PyYAMLDocumentation)  
+
+##### pyyaml YAML 
+
+A very popular YAML framework, you can `load` YAML definition string to YAMLObject, and `dump` YAMLObject to YAML string.  
+It's easy to design a global dictionary to maintain the YAMLObject class type, 
+so How to register this class object to this global dict without Additional code(when define the target YAMLObject subclass)?  
+the answer is meta class:  
+take close look at the pyyaml source code:  
+
+`pyyaml/lib3/yaml/__init__.py`
+```python
+class YAMLObjectMetaclass(type):
+    """
+    The metaclass for YAMLObject.
+    """
+    def __init__(cls, name, bases, kwds):
+        super(YAMLObjectMetaclass, cls).__init__(name, bases, kwds)
+        if 'yaml_tag' in kwds and kwds['yaml_tag'] is not None:
+            if isinstance(cls.yaml_loader, list):
+                for loader in cls.yaml_loader:
+                    loader.add_constructor(cls.yaml_tag, cls.from_yaml)
+            else:
+                cls.yaml_loader.add_constructor(cls.yaml_tag, cls.from_yaml)
+
+            cls.yaml_dumper.add_representer(cls, cls.to_yaml)
+
+class YAMLObject(metaclass=YAMLObjectMetaclass):
+    """
+    An object that can dump itself to a YAML stream
+    and load itself from a YAML stream.
+    """
+
+    __slots__ = ()  # no direct instantiation, so allow immutable subclasses
+
+    yaml_loader = [Loader, FullLoader, UnsafeLoader]
+    yaml_dumper = Dumper
+
+    yaml_tag = None
+    yaml_flow_style = None
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        """
+        Convert a representation node to a Python object.
+        """
+        return loader.construct_yaml_object(node, cls)
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        """
+        Convert a Python object to a representation node.
+        """
+        return dumper.represent_yaml_object(cls.yaml_tag, data, cls,
+                flow_style=cls.yaml_flow_style)
+
+```
+
+[Github - pyyaml/lib3/yaml/\__init__.py](https://github.com/yaml/pyyaml/blob/d0d660d035905d9c49fc0f8dafb579d2cc68c0c8/lib3/yaml/__init__.py#L384)
+
+##### metaclass ORM
+
+[Python -- how to implement ORM with metaclasses](https://programmer.help/blogs/python-how-to-implement-orm-with-metaclasses.html)
+
+#### metaclass best practice
+
+As mentioned before, the metaclass give powerful ability to change class type on the fly.
+ On the other hand, metaclass code is more complex to understand. 
+ So do NOT use metaclass, unless you are under the following scenario:  
+ framework development:  
+ * ORM
+ * DSL  
+ ...... 
 
 ## References
 
@@ -344,4 +475,5 @@ class Metaclass(type):
 * [Guido van Rossum - Method Resolution Order](http://python-history.blogspot.com/2010/06/method-resolution-order.html)
 * [expert python programming](https://www.packtpub.com/application-development/expert-python-programming-third-edition)
 * [Wikipedia type introspection](https://en.wikipedia.org/wiki/Type_introspection)
-* [Wikipedia reflection]()
+* [Wikipedia reflection](https://en.wikipedia.org/wiki/Reflection_(computer_programming))
+* [PEP 3115 -- Metaclasses in Python 3000](https://www.python.org/dev/peps/pep-3115/)
